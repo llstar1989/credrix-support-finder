@@ -2228,3 +2228,885 @@ var supportFinderData = [
     link: "https://www.gov.kr/"
   }
   ];
+/* =========================
+   Credrix 정부지원금 검색 기능 코드
+   위치: supportFinderData 배열 끝난 뒤 ]; 아래에 붙이기
+========================= */
+
+var supportFinderAllResults = [];
+var supportFinderOriginalResults = [];
+var supportFinderCurrentPage = 1;
+var supportFinderItemsPerPage = 9;
+var supportFinderCurrentSort = "recommended";
+
+/* HTML 특수문자 보호 */
+function supportFinderEscapeHTML(value) {
+  if (value === undefined || value === null) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/* 체크된 값 가져오기 */
+function supportFinderGetCheckedValues(selector) {
+  var checked = document.querySelectorAll(selector + " input[type='checkbox']:checked");
+  var values = [];
+
+  checked.forEach(function (input) {
+    values.push(input.value);
+  });
+
+  return values;
+}
+
+/* 검색 실행 */
+function supportFinderStartSearch() {
+  var selectedAges = supportFinderGetCheckedValues(".support-finder-filter-group:nth-of-type(1)");
+  var selectedRegions = supportFinderGetCheckedValues(".support-finder-filter-group:nth-of-type(2)");
+
+  var resultsGrid = document.getElementById("supportFinderSupportGrid");
+  var resultsCount = document.getElementById("supportFinderResultsCount");
+
+  if (!resultsGrid || !resultsCount) {
+    alert("검색 결과 영역을 찾을 수 없습니다.");
+    return;
+  }
+
+  if (!Array.isArray(supportFinderData)) {
+    resultsGrid.innerHTML = supportFinderNoResultHTML("지원금 데이터를 불러오지 못했습니다.");
+    resultsCount.textContent = "0개 지원금";
+    supportFinderHidePagination();
+    supportFinderHideSortButtons();
+    return;
+  }
+
+  if (selectedAges.length === 0 || selectedRegions.length === 0) {
+    supportFinderOriginalResults = [];
+    supportFinderAllResults = [];
+    supportFinderCurrentPage = 1;
+
+    resultsGrid.innerHTML = supportFinderNoResultHTML("연령대와 지역을 각각 1개 이상 선택해주세요.");
+    resultsCount.textContent = "0개 지원금";
+    supportFinderHidePagination();
+    supportFinderHideSortButtons();
+    supportFinderUpdateResultSummary(selectedAges, selectedRegions, 0);
+    return;
+  }
+
+  var filtered = supportFinderData.filter(function (item) {
+    var itemAge = Array.isArray(item.age) ? item.age : [];
+    var itemRegion = Array.isArray(item.region) ? item.region : [];
+
+    var ageMatch = selectedAges.some(function (age) {
+      return itemAge.indexOf(age) !== -1;
+    });
+
+    var regionMatch = selectedRegions.some(function (region) {
+      return itemRegion.indexOf(region) !== -1 || itemRegion.indexOf("전국") !== -1;
+    });
+
+    return ageMatch && regionMatch;
+  });
+
+  supportFinderOriginalResults = filtered.slice();
+  supportFinderAllResults = filtered.slice();
+  supportFinderCurrentPage = 1;
+  supportFinderCurrentSort = "recommended";
+
+  supportFinderUpdateResultSummary(selectedAges, selectedRegions, supportFinderAllResults.length);
+
+  if (supportFinderAllResults.length === 0) {
+    resultsGrid.innerHTML = supportFinderNoResultHTML("선택한 조건에 맞는 지원금이 없습니다.");
+    supportFinderHidePagination();
+    supportFinderHideSortButtons();
+    return;
+  }
+
+  supportFinderShowSortButtons();
+  supportFinderSetActiveSortButton("recommended");
+  supportFinderDisplayCurrentPage();
+  supportFinderUpdatePagination();
+}
+
+/* 결과 상단 조건 안내 */
+function supportFinderUpdateResultSummary(ages, regions, count) {
+  var resultsCount = document.getElementById("supportFinderResultsCount");
+  if (resultsCount) {
+    resultsCount.textContent = count + "개 지원금";
+  }
+
+  var resultsHeaderTitle = document.querySelector(".support-finder-results-header h2");
+  if (resultsHeaderTitle) {
+    resultsHeaderTitle.textContent = "선택 조건 맞춤 지원금";
+  }
+
+  var oldSummary = document.getElementById("supportFinderConditionSummary");
+  if (oldSummary) oldSummary.remove();
+
+  var header = document.querySelector(".support-finder-results-header");
+  if (!header) return;
+
+  var summary = document.createElement("div");
+  summary.id = "supportFinderConditionSummary";
+
+  var ageText = ages.length ? ages.join(", ") : "연령대 미선택";
+  var regionText = regions.length ? regions.join(", ") : "지역 미선택";
+
+  summary.innerHTML =
+    "<strong>" +
+    supportFinderEscapeHTML(ageText) +
+    " · " +
+    supportFinderEscapeHTML(regionText) +
+    "</strong> 기준으로 조회 가능한 전국 공통 및 지역 지원 정보를 표시합니다.";
+
+  header.appendChild(summary);
+}
+
+/* 결과 카드 출력 */
+function supportFinderRenderCard(item) {
+  var title = supportFinderEscapeHTML(item.title || "");
+  var subtitle = supportFinderEscapeHTML(item.subtitle || "");
+  var category = supportFinderEscapeHTML(item.category || "지원금");
+  var target = supportFinderEscapeHTML(item.target || "대상자 확인 필요");
+  var amount = supportFinderEscapeHTML(item.amount || "개인별 상이");
+  var deadline = supportFinderEscapeHTML(item.deadline || "신청기간 확인");
+  var status = supportFinderEscapeHTML(item.status || "신청기간확인");
+  var description = supportFinderEscapeHTML(item.description || "");
+  var source = supportFinderEscapeHTML(item.source || "공식기관");
+  var link = item.link || "#";
+
+  var statusClass = supportFinderGetStatusClass(item.status || "");
+  var ddayText = supportFinderGetDdayText(item.deadline || "");
+  var urgentClass = supportFinderIsUrgent(item.deadline || "") ? " urgent" : "";
+
+  var statusDisplay = status;
+  if (ddayText) {
+    statusDisplay = ddayText;
+  }
+
+  return ''
+    + '<div class="support-finder-support-card credrix-card' + urgentClass + '">'
+    + '  <div class="credrix-card-top">'
+    + '    <span class="credrix-category">' + category + '</span>'
+    + '    <span class="credrix-source">' + source + '</span>'
+    + '  </div>'
+    + '  <h4><a href="' + supportFinderEscapeHTML(link) + '" target="_blank" rel="noopener noreferrer">' + title + '</a></h4>'
+    + '  <p class="credrix-subtitle">' + subtitle + '</p>'
+    + '  <p class="credrix-desc">' + description + '</p>'
+    + '  <div class="credrix-info-block">'
+    + '    <div class="credrix-info-label">지원내용</div>'
+    + '    <div class="credrix-info-value">' + amount + '</div>'
+    + '  </div>'
+    + '  <div class="credrix-meta-row">'
+    + '    <span class="credrix-status ' + statusClass + '">' + statusDisplay + '</span>'
+    + '    <span class="credrix-deadline">' + deadline + '</span>'
+    + '  </div>'
+    + '  <div class="credrix-target">신청대상: ' + target + '</div>'
+    + '  <a class="credrix-official-btn" href="' + supportFinderEscapeHTML(link) + '" target="_blank" rel="noopener noreferrer">공식 안내 바로가기 →</a>'
+    + '</div>';
+}
+
+/* 빈 결과 */
+function supportFinderNoResultHTML(message) {
+  return ''
+    + '<div class="support-finder-no-results">'
+    + '  <div style="font-size:48px;margin-bottom:20px;">🔎</div>'
+    + '  <div><strong>' + supportFinderEscapeHTML(message) + '</strong></div>'
+    + '  <div style="font-size:14px;margin-top:10px;color:#666;">조건을 변경한 뒤 다시 검색해보세요.</div>'
+    + '</div>';
+}
+
+/* 현재 페이지 출력 */
+function supportFinderDisplayCurrentPage() {
+  var resultsGrid = document.getElementById("supportFinderSupportGrid");
+  if (!resultsGrid) return;
+
+  var startIndex = (supportFinderCurrentPage - 1) * supportFinderItemsPerPage;
+  var endIndex = startIndex + supportFinderItemsPerPage;
+  var currentPageResults = supportFinderAllResults.slice(startIndex, endIndex);
+
+  var html = "";
+
+  currentPageResults.forEach(function (item) {
+    html += supportFinderRenderCard(item);
+  });
+
+  resultsGrid.innerHTML = html;
+}
+
+/* 페이지네이션 */
+function supportFinderUpdatePagination() {
+  var totalPages = Math.ceil(supportFinderAllResults.length / supportFinderItemsPerPage);
+  var pagination = document.getElementById("supportFinderPagination");
+  var prevBtn = document.getElementById("supportFinderPrevBtn");
+  var nextBtn = document.getElementById("supportFinderNextBtn");
+  var pageNumbers = document.getElementById("supportFinderPageNumbers");
+
+  if (!pagination || !prevBtn || !nextBtn || !pageNumbers) return;
+
+  if (totalPages <= 1) {
+    pagination.style.display = "none";
+    return;
+  }
+
+  pagination.style.display = "flex";
+
+  prevBtn.disabled = supportFinderCurrentPage === 1;
+  nextBtn.disabled = supportFinderCurrentPage === totalPages;
+
+  var html = "";
+  var maxVisiblePages = 7;
+
+  var startPage = Math.max(1, supportFinderCurrentPage - Math.floor(maxVisiblePages / 2));
+  var endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+  if (endPage - startPage + 1 < maxVisiblePages) {
+    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+  }
+
+  for (var i = startPage; i <= endPage; i++) {
+    html += '<button class="support-finder-pagination-number ' + (i === supportFinderCurrentPage ? "active" : "") + '" onclick="supportFinderGoToPage(' + i + ')">' + i + '</button>';
+  }
+
+  pageNumbers.innerHTML = html;
+}
+
+function supportFinderChangePage(direction) {
+  var totalPages = Math.ceil(supportFinderAllResults.length / supportFinderItemsPerPage);
+
+  if (direction === -1 && supportFinderCurrentPage > 1) {
+    supportFinderCurrentPage--;
+  }
+
+  if (direction === 1 && supportFinderCurrentPage < totalPages) {
+    supportFinderCurrentPage++;
+  }
+
+  supportFinderDisplayCurrentPage();
+  supportFinderUpdatePagination();
+  supportFinderScrollToResults();
+}
+
+function supportFinderGoToPage(pageNumber) {
+  supportFinderCurrentPage = pageNumber;
+  supportFinderDisplayCurrentPage();
+  supportFinderUpdatePagination();
+  supportFinderScrollToResults();
+}
+
+function supportFinderHidePagination() {
+  var pagination = document.getElementById("supportFinderPagination");
+  if (pagination) pagination.style.display = "none";
+}
+
+function supportFinderScrollToResults() {
+  var section = document.querySelector(".support-finder-results-section");
+  if (section) {
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+/* 정렬 버튼 */
+function supportFinderShowSortButtons() {
+  var filterButtons = document.getElementById("supportFinderFilterButtons");
+  if (!filterButtons) return;
+
+  filterButtons.style.display = "flex";
+  filterButtons.innerHTML =
+    '<span class="support-finder-filter-label">정렬:</span>' +
+    '<button class="support-finder-filter-btn active" id="supportFinderRecommendedSort" onclick="supportFinderSortResults(\'recommended\')">추천순</button>' +
+    '<button class="support-finder-filter-btn" id="supportFinderDeadlineSort" onclick="supportFinderSortResults(\'deadline\')">신청상태순</button>' +
+    '<button class="support-finder-filter-btn" id="supportFinderAmountSort" onclick="supportFinderSortResults(\'amount\')">지원금액순</button>' +
+    '<button class="support-finder-filter-btn" id="supportFinderAgencySort" onclick="supportFinderSortResults(\'agency\')">공식기관순</button>';
+}
+
+function supportFinderHideSortButtons() {
+  var filterButtons = document.getElementById("supportFinderFilterButtons");
+  if (filterButtons) filterButtons.style.display = "none";
+}
+
+function supportFinderSetActiveSortButton(sortType) {
+  document.querySelectorAll(".support-finder-filter-btn").forEach(function (btn) {
+    btn.classList.remove("active");
+  });
+
+  var map = {
+    recommended: "supportFinderRecommendedSort",
+    deadline: "supportFinderDeadlineSort",
+    amount: "supportFinderAmountSort",
+    agency: "supportFinderAgencySort"
+  };
+
+  var activeBtn = document.getElementById(map[sortType]);
+  if (activeBtn) activeBtn.classList.add("active");
+}
+
+function supportFinderSortResults(sortType) {
+  supportFinderCurrentSort = sortType;
+  supportFinderCurrentPage = 1;
+  supportFinderSetActiveSortButton(sortType);
+
+  if (sortType === "recommended") {
+    supportFinderAllResults = supportFinderOriginalResults.slice();
+  }
+
+  if (sortType === "deadline") {
+    supportFinderAllResults = supportFinderOriginalResults.slice().sort(function (a, b) {
+      return supportFinderStatusScore(a.status, a.deadline) - supportFinderStatusScore(b.status, b.deadline);
+    });
+  }
+
+  if (sortType === "amount") {
+    supportFinderAllResults = supportFinderOriginalResults.slice().sort(function (a, b) {
+      return supportFinderParseAmount(b.amount) - supportFinderParseAmount(a.amount);
+    });
+  }
+
+  if (sortType === "agency") {
+    supportFinderAllResults = supportFinderOriginalResults.slice().sort(function (a, b) {
+      return String(a.source || "").localeCompare(String(b.source || ""), "ko");
+    });
+  }
+
+  supportFinderDisplayCurrentPage();
+  supportFinderUpdatePagination();
+}
+
+/* 상태 점수 */
+function supportFinderStatusScore(status, deadline) {
+  if (supportFinderIsUrgent(deadline || "")) return 0;
+
+  status = status || "";
+
+  if (status.indexOf("상시접수") !== -1) return 1;
+  if (status.indexOf("상시조회") !== -1) return 2;
+  if (status.indexOf("신청기간") !== -1) return 3;
+  if (status.indexOf("공고") !== -1) return 4;
+
+  return 9;
+}
+
+/* 금액 파싱 */
+function supportFinderParseAmount(amountText) {
+  if (!amountText) return 0;
+
+  var text = String(amountText);
+  var nums = text.match(/\d+/g);
+  if (!nums) return 0;
+
+  var max = 0;
+
+  nums.forEach(function (num) {
+    var n = parseInt(num, 10);
+
+    if (text.indexOf("억") !== -1) {
+      n = n * 100000000;
+    } else if (text.indexOf("천만") !== -1) {
+      n = n * 10000000;
+    } else if (text.indexOf("만") !== -1) {
+      n = n * 10000;
+    }
+
+    if (n > max) max = n;
+  });
+
+  return max;
+}
+
+/* 날짜 파싱 */
+function supportFinderParseDate(deadline) {
+  if (!deadline) return null;
+
+  var text = String(deadline);
+
+  var dday = text.match(/D-(\d+)/i);
+  if (dday) {
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    today.setDate(today.getDate() + parseInt(dday[1], 10));
+    return today;
+  }
+
+  var dateMatch = text.match(/(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})/);
+  if (dateMatch) {
+    return new Date(
+      parseInt(dateMatch[1], 10),
+      parseInt(dateMatch[2], 10) - 1,
+      parseInt(dateMatch[3], 10)
+    );
+  }
+
+  return null;
+}
+
+/* D-day 표시 */
+function supportFinderGetDdayText(deadline) {
+  var date = supportFinderParseDate(deadline);
+  if (!date) return "";
+
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+
+  var diff = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+
+  if (diff < 0) return "마감";
+  if (diff === 0) return "D-Day";
+  return "D-" + diff;
+}
+
+/* 마감 임박 */
+function supportFinderIsUrgent(deadline) {
+  var date = supportFinderParseDate(deadline);
+  if (!date) return false;
+
+  var today = new Date();
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+
+  var diff = Math.ceil((date - today) / (1000 * 60 * 60 * 24));
+
+  return diff >= 0 && diff <= 7;
+}
+
+/* 상태 클래스 */
+function supportFinderGetStatusClass(status) {
+  if (!status) return "status-default";
+
+  if (status.indexOf("상시접수") !== -1) return "status-open";
+  if (status.indexOf("상시조회") !== -1) return "status-check";
+  if (status.indexOf("신청기간") !== -1) return "status-period";
+  if (status.indexOf("공고") !== -1) return "status-notice";
+
+  return "status-default";
+}
+
+/* 체크박스 UI */
+function supportFinderInitCheckboxUI() {
+  document.querySelectorAll(".support-finder-checkbox-item").forEach(function (box) {
+    var input = box.querySelector("input[type='checkbox']");
+    if (!input) return;
+
+    box.classList.toggle("checked", input.checked);
+
+    box.addEventListener("click", function (event) {
+      if (event.target.tagName === "INPUT") {
+        setTimeout(function () {
+          box.classList.toggle("checked", input.checked);
+        }, 0);
+        return;
+      }
+
+      event.preventDefault();
+      input.checked = !input.checked;
+      box.classList.toggle("checked", input.checked);
+    });
+  });
+}
+
+/* 디자인 CSS 주입 */
+function supportFinderInjectCustomStyle() {
+  if (document.getElementById("credrixSupportFinderStyle")) return;
+
+  var style = document.createElement("style");
+  style.id = "credrixSupportFinderStyle";
+
+  style.innerHTML = `
+    .support-finder-container {
+      max-width: 920px;
+      margin: 0 auto;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #1f2937;
+    }
+
+    .support-finder-header {
+      background: linear-gradient(135deg, #003478 0%, #001A6E 100%);
+      border-radius: 18px;
+      padding: 26px 22px;
+      color: #ffffff;
+      margin-bottom: 16px;
+      box-shadow: 0 6px 20px rgba(0, 26, 110, 0.18);
+    }
+
+    .support-finder-header h1 {
+      font-size: 1.45rem;
+      line-height: 1.4;
+      margin: 0 0 8px;
+      font-weight: 900;
+    }
+
+    .support-finder-header p {
+      font-size: 0.92rem;
+      line-height: 1.7;
+      margin: 0;
+      opacity: 0.9;
+    }
+
+    .support-finder-filter-section,
+    .support-finder-results-section {
+      background: #ffffff;
+      border: 1px solid #dbe3ef;
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .support-finder-filter-group {
+      margin-bottom: 22px;
+    }
+
+    .support-finder-filter-group h3 {
+      font-size: 1rem;
+      color: #111827;
+      font-weight: 900;
+      margin: 0 0 12px;
+    }
+
+    .support-finder-checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+    }
+
+    .support-finder-checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 11px 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .support-finder-checkbox-item:hover {
+      border-color: #003478;
+      background: #f0f6ff;
+    }
+
+    .support-finder-checkbox-item.checked {
+      background: #e7f0ff;
+      border-color: #003478;
+    }
+
+    .support-finder-checkbox-item input {
+      width: 16px;
+      height: 16px;
+      accent-color: #003478;
+      flex-shrink: 0;
+    }
+
+    .support-finder-checkbox-item label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .support-finder-search-button {
+      width: 100%;
+      background: #dc2626;
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 1rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(220,38,38,0.22);
+    }
+
+    .support-finder-search-button:hover {
+      background: #b91c1c;
+    }
+
+    .support-finder-results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .support-finder-results-header h2 {
+      font-size: 1.05rem;
+      color: #111827;
+      font-weight: 900;
+      margin: 0;
+    }
+
+    .support-finder-results-count {
+      background: #003478;
+      color: #ffffff;
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 900;
+    }
+
+    #supportFinderConditionSummary {
+      width: 100%;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 11px 13px;
+      color: #475569;
+      font-size: 0.85rem;
+      line-height: 1.65;
+    }
+
+    #supportFinderConditionSummary strong {
+      color: #003478;
+    }
+
+    .support-finder-filter-buttons {
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px 0 16px;
+      border-bottom: 1px solid #eef2f7;
+      margin-bottom: 16px;
+    }
+
+    .support-finder-filter-label {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: #475569;
+    }
+
+    .support-finder-filter-btn {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #dbe3ef;
+      border-radius: 999px;
+      padding: 7px 13px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .support-finder-filter-btn.active {
+      background: #003478;
+      color: #ffffff;
+      border-color: #003478;
+    }
+
+    .support-finder-support-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .credrix-card {
+      background: #ffffff;
+      border: 1px solid #dbe3ef;
+      border-top: 4px solid #003478;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+    }
+
+    .credrix-card.urgent {
+      border-top-color: #dc2626;
+    }
+
+    .credrix-card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .credrix-category {
+      display: inline-block;
+      background: #e7f0ff;
+      color: #003478;
+      border: 1px solid #b7cbed;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .credrix-source {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .credrix-card h4 {
+      font-size: 1.08rem;
+      color: #111827;
+      margin: 0 0 8px;
+      line-height: 1.45;
+      font-weight: 900;
+    }
+
+    .credrix-card h4 a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .credrix-subtitle {
+      font-size: 0.88rem;
+      color: #475569;
+      margin: 0 0 9px;
+      font-weight: 700;
+    }
+
+    .credrix-desc {
+      font-size: 0.84rem;
+      color: #4b5563;
+      line-height: 1.75;
+      margin: 0 0 14px;
+    }
+
+    .credrix-info-block {
+      background: #f1f5f9;
+      border: 1px solid #dbe3ef;
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+
+    .credrix-info-label {
+      font-size: 12px;
+      color: #003478;
+      font-weight: 900;
+      margin-bottom: 4px;
+    }
+
+    .credrix-info-value {
+      font-size: 0.88rem;
+      color: #111827;
+      font-weight: 900;
+      line-height: 1.5;
+    }
+
+    .credrix-meta-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .credrix-status {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .status-open { background: #dcfce7; color: #15803d; }
+    .status-check { background: #e0f2fe; color: #0369a1; }
+    .status-period { background: #fef3c7; color: #92400e; }
+    .status-notice { background: #f3e8ff; color: #6b21a8; }
+    .status-default { background: #e5e7eb; color: #374151; }
+
+    .credrix-deadline {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 800;
+    }
+
+    .credrix-target {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.65;
+      margin: 10px 0 14px;
+    }
+
+    .credrix-official-btn {
+      display: block;
+      width: 100%;
+      background: #dc2626;
+      color: #ffffff !important;
+      text-align: center;
+      text-decoration: none !important;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-weight: 900;
+      margin-top: 12px;
+    }
+
+    .credrix-official-btn:hover {
+      background: #b91c1c;
+    }
+
+    .support-finder-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 6px;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #eef2f7;
+      flex-wrap: wrap;
+    }
+
+    .support-finder-pagination-btn,
+    .support-finder-pagination-number {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #dbe3ef;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .support-finder-pagination-number.active {
+      background: #003478;
+      color: #ffffff;
+      border-color: #003478;
+    }
+
+    .support-finder-pagination-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .support-finder-no-results {
+      text-align: center;
+      padding: 42px 20px;
+      color: #64748b;
+    }
+
+    @media (max-width: 768px) {
+      .support-finder-checkbox-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .support-finder-filter-section,
+      .support-finder-results-section {
+        padding: 18px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .support-finder-checkbox-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+/* 초기화 */
+document.addEventListener("DOMContentLoaded", function () {
+  supportFinderInjectCustomStyle();
+  supportFinderInitCheckboxUI();
+});
