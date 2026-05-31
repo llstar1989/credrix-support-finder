@@ -2264,7 +2264,7 @@ function supportFinderGetCheckedValues(selector) {
 
 /* 검색 실행 */
 function supportFinderStartSearch() {
-  var selectedAges = supportFinderGetCheckedValues(".support-finder-filter-group:nth-of-type(1)");
+  var selectedAges = supportFinderGetCheckedValues(".age-grid");
   var selectedRegions = supportFinderGetCheckedValues(".support-finder-filter-group:nth-of-type(2)");
 
   var resultsGrid = document.getElementById("supportFinderSupportGrid");
