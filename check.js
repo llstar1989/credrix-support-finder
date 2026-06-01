@@ -2331,6 +2331,40 @@ function supportFinderStartSearch() {
   supportFinderUpdatePagination();
 }
 
+/* 결과 상단 조건 안내 */
+function supportFinderUpdateResultSummary(ages, regions, count) {
+  var resultsCount = document.getElementById("supportFinderResultsCount");
+  if (resultsCount) {
+    resultsCount.textContent = count + "개 지원금";
+  }
+
+  var resultsHeaderTitle = document.querySelector(".support-finder-results-header h2");
+  if (resultsHeaderTitle) {
+    resultsHeaderTitle.textContent = "선택 조건 맞춤 지원금";
+  }
+
+  var oldSummary = document.getElementById("supportFinderConditionSummary");
+  if (oldSummary) oldSummary.remove();
+
+  var header = document.querySelector(".support-finder-results-header");
+  if (!header) return;
+
+  var summary = document.createElement("div");
+  summary.id = "supportFinderConditionSummary";
+
+  var ageText = ages && ages.length ? ages.join(", ") : "연령대 미선택";
+  var regionText = regions && regions.length ? regions.join(", ") : "지역 미선택";
+
+  summary.innerHTML =
+    "<strong>" +
+    supportFinderEscapeHTML(ageText) +
+    " · " +
+    supportFinderEscapeHTML(regionText) +
+    "</strong> 기준으로 조회 가능한 전국 공통 및 지역 지원 정보를 표시합니다.";
+
+  header.appendChild(summary);
+}
+
 /* 결과 카드 출력 */
 function supportFinderRenderCard(item) {
   var title = supportFinderEscapeHTML(item.title || "");
@@ -2352,6 +2386,9 @@ function supportFinderRenderCard(item) {
   if (ddayText) {
     statusDisplay = ddayText;
   }
+
+  // 기존 return 카드 HTML 계속 이어짐
+}
 
   return ''
     + '<div class="support-finder-support-card credrix-card' + urgentClass + '">'
