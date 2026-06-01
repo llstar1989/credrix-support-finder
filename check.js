@@ -2387,8 +2387,6 @@ function supportFinderRenderCard(item) {
     statusDisplay = ddayText;
   }
 
-  // 기존 return 카드 HTML 계속 이어짐
-}
 
   return ''
     + '<div class="support-finder-support-card credrix-card' + urgentClass + '">'
