@@ -2388,7 +2388,6 @@ function supportFinderRenderCard(item) {
     + '</div>'
     + '<h4>' + title + '</h4>'
     + '<p class="credrix-subtitle">' + subtitle + '</p>'
-    + '<p class="credrix-desc">' + description + '</p>'
     + '<div class="credrix-info-block">'
     + '<div class="credrix-info-label">지원내용</div>'
     + '<div class="credrix-info-value">' + amount + '</div>'
@@ -2398,6 +2397,7 @@ function supportFinderRenderCard(item) {
     + '<span class="credrix-deadline">' + deadline + '</span>'
     + '</div>'
     + '<div class="credrix-target">신청대상: ' + target + '</div>'
+    + '<div style="font-size:0.78rem;color:#64748b;margin-top:8px;">🏛️ 출처: ' + source + '</div>'
     + '</div>'
     + '</a>';
 }
