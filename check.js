@@ -2371,57 +2371,35 @@ function supportFinderRenderCard(item) {
   var status = supportFinderEscapeHTML(item.status || "신청기간확인");
   var source = supportFinderEscapeHTML(item.source || "공식기관");
   var link = item.link || "#";
-
   var statusClass = supportFinderGetStatusClass(item.status || "");
 
   return ''
     + '<a href="' + supportFinderEscapeHTML(link) + '" target="_blank" rel="noopener noreferrer" class="credrix-card-link">'
-    + '  <div class="credrix-card">'
-    + '    <div class="credrix-card-top">'
-    + '      <span class="credrix-category">' + category + '</span>'
-    + '      <span class="credrix-source">' + source + '</span>'
-    + '    </div>'
-    + '    <h4>' + title + '</h4>'
-    + '    <p class="credrix-subtitle">' + subtitle + '</p>'
-    + '    <div class="credrix-info-block">'
-    + '      <div class="credrix-info-label">지원내용</div>'
-    + '      <div class="credrix-info-value">' + amount + '</div>'
-    + '    </div>'
-    + '    <div class="credrix-meta-row">'
-    + '      <span class="credrix-status ' + statusClass + '">' + status + '</span>'
-    + '    </div>'
-    + '  </div>'
+    + '<div class="credrix-card">'
+    + '<div class="credrix-card-top">'
+    + '<span class="credrix-category">' + category + '</span>'
+    + '<span class="credrix-source">' + source + '</span>'
+    + '</div>'
+    + '<h4>' + title + '</h4>'
+    + '<p class="credrix-subtitle">' + subtitle + '</p>'
+    + '<div class="credrix-info-block">'
+    + '<div class="credrix-info-label">지원내용</div>'
+    + '<div class="credrix-info-value">' + amount + '</div>'
+    + '</div>'
+    + '<div class="credrix-meta-row">'
+    + '<span class="credrix-status ' + statusClass + '">' + status + '</span>'
+    + '</div>'
+    + '</div>'
     + '</a>';
-}
-
-  return ''
-    + '<div class="support-finder-support-card credrix-card' + urgentClass + '">'
-    + '  <div class="credrix-card-top">'
-    + '    <span class="credrix-category">' + category + '</span>'
-    + '    <span class="credrix-source">' + source + '</span>'
-    + '  </div>'
-    + '  <h4><a href="' + supportFinderEscapeHTML(link) + '" target="_blank" rel="noopener noreferrer">' + title + '</a></h4>'
-    + '  <p class="credrix-subtitle">' + subtitle + '</p>'
-    + '  <p class="credrix-desc">' + description + '</p>'
-    + '  <div class="credrix-info-block">'
-    + '    <div class="credrix-info-label">지원내용</div>'
-    + '    <div class="credrix-info-value">' + amount + '</div>'
-    + '  </div>'
-    + '  <div class="credrix-meta-row">'
-    + '    <span class="credrix-status ' + statusClass + '">' + statusDisplay + '</span>'
-    + '    <span class="credrix-deadline">' + deadline + '</span>'
-    + '  </div>'
-    + '  <div class="credrix-target">신청대상: ' + target + '</div>'
-    + '</div>';
 }
 
 /* 빈 결과 */
 function supportFinderNoResultHTML(message) {
   return ''
     + '<div class="support-finder-no-results">'
-    + '  <div style="font-size:48px;margin-bottom:20px;">🔎</div>'
-    + '  <div><strong>' + supportFinderEscapeHTML(message) + '</strong></div>'
-    + '  <div style="font-size:14px;margin-top:10px;color:#666;">조건을 변경한 뒤 다시 검색해보세요.</div>'
+    + '<div style="font-size:48px;margin-bottom:20px;">🔎</div>'
+    + '<div><strong>' + supportFinderEscapeHTML(message) + '</strong></div>'
+    + '<div style="font-size:14px;margin-top:10px;color:#666;">조건을 변경한 뒤 다시 검색해보세요.</div>'
     + '</div>';
 }
 
