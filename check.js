@@ -1,7 +1,7 @@
 var supportFinderData = [
   {
     title: "근로장려금",
-    subtitle: "일하는 저소득 가구를 위한 근로 장려 지원",
+    subtitle: "일하는 저소득 가구를 위한 근로장려지원",
     category: "근로·소득지원",
     age: ["20대", "30대", "40대", "50대", "60대", "70대"],
     region: ["전국"],
@@ -2384,7 +2384,7 @@ function supportFinderRenderCard(item) {
     + '<div class="support-finder-support-card credrix-card' + urgentClass + '">'
     + '<div class="credrix-card-top">'
     + '<span class="credrix-category">' + category + '</span>'
-    + '<span class="credrix-source">' + source + '</span>'
+    + '<span class="credrix-source">🏛️출처:' + source + '</span>'
     + '</div>'
     + '<h4>' + title + '</h4>'
     + '<p class="credrix-subtitle">' + subtitle + '</p>'
@@ -2397,7 +2397,6 @@ function supportFinderRenderCard(item) {
     + '<span class="credrix-deadline">' + deadline + '</span>'
     + '</div>'
     + '<div class="credrix-target">신청대상: ' + target + '</div>'
-    + '<div style="font-size:0.78rem;color:#64748b;margin-top:8px;">🏛️ 출처: ' + source + '</div>'
     + '</div>'
     + '</a>';
 }
