@@ -2374,7 +2374,7 @@ function supportFinderRenderCard(item) {
   var statusClass = supportFinderGetStatusClass(item.status || "");
 
   return ''
-    + '<a href="' + supportFinderEscapeHTML(link) + '" target="_blank" rel="noopener noreferrer" class="credrix-card-link">'
+    + '<a href="' + supportFinderEscapeHTML(link) + '" class="credrix-card-link">'
     + '<div class="credrix-card">'
     + '<div class="credrix-card-top">'
     + '<span class="credrix-category">' + category + '</span>'
