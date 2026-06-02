@@ -11,7 +11,7 @@ var supportFinderData = [
     status: "신청기간확인",
     description: "소득이 낮은 근로자, 사업자, 종교인 가구의 생활 안정을 돕기 위해 지급되는 국세청 장려금 제도입니다.",
     source: "국세청",
-    link: "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?cntntsId=7781&mi=2450"
+    link: "https://apply.credrix.com/"
   },
   {
     title: "자녀장려금",
@@ -25,7 +25,7 @@ var supportFinderData = [
     status: "신청기간확인",
     description: "자녀를 양육하는 저소득 가구의 양육 부담을 줄이기 위해 지급되는 국세청 장려금 제도입니다.",
     source: "국세청",
-    link: "https://www.nts.go.kr/nts/cm/cntnts/cntntsView.do?cntntsId=7782&mi=2451"
+    link: "https://hometax.go.kr/websquare/websquare.html?w2xPath=/ui/pp/index_pp.xml&tmIdx=45&tm2lIdx=4501000000&tm3lIdx=4501030000"
   },
   {
     title: "보조금24 맞춤 혜택 조회",
