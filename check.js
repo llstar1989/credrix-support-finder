@@ -2367,23 +2367,32 @@ function supportFinderRenderCard(item) {
   var title = supportFinderEscapeHTML(item.title || "");
   var subtitle = supportFinderEscapeHTML(item.subtitle || "");
   var category = supportFinderEscapeHTML(item.category || "지원금");
-  var target = supportFinderEscapeHTML(item.target || "대상자 확인 필요");
   var amount = supportFinderEscapeHTML(item.amount || "개인별 상이");
-  var deadline = supportFinderEscapeHTML(item.deadline || "신청기간 확인");
   var status = supportFinderEscapeHTML(item.status || "신청기간확인");
-  var description = supportFinderEscapeHTML(item.description || "");
   var source = supportFinderEscapeHTML(item.source || "공식기관");
   var link = item.link || "#";
 
   var statusClass = supportFinderGetStatusClass(item.status || "");
-  var ddayText = supportFinderGetDdayText(item.deadline || "");
-  var urgentClass = supportFinderIsUrgent(item.deadline || "") ? " urgent" : "";
 
-  var statusDisplay = status;
-  if (ddayText) {
-    statusDisplay = ddayText;
-  }
-
+  return ''
+    + '<a href="' + supportFinderEscapeHTML(link) + '" target="_blank" rel="noopener noreferrer" class="credrix-card-link">'
+    + '  <div class="credrix-card">'
+    + '    <div class="credrix-card-top">'
+    + '      <span class="credrix-category">' + category + '</span>'
+    + '      <span class="credrix-source">' + source + '</span>'
+    + '    </div>'
+    + '    <h4>' + title + '</h4>'
+    + '    <p class="credrix-subtitle">' + subtitle + '</p>'
+    + '    <div class="credrix-info-block">'
+    + '      <div class="credrix-info-label">지원내용</div>'
+    + '      <div class="credrix-info-value">' + amount + '</div>'
+    + '    </div>'
+    + '    <div class="credrix-meta-row">'
+    + '      <span class="credrix-status ' + statusClass + '">' + status + '</span>'
+    + '    </div>'
+    + '  </div>'
+    + '</a>';
+}
 
   return ''
     + '<div class="support-finder-support-card credrix-card' + urgentClass + '">'
