@@ -2412,7 +2412,6 @@ function supportFinderRenderCard(item) {
     + '    <span class="credrix-deadline">' + deadline + '</span>'
     + '  </div>'
     + '  <div class="credrix-target">신청대상: ' + target + '</div>'
-    + '  <a class="credrix-official-btn" href="' + supportFinderEscapeHTML(link) + '" target="_blank" rel="noopener noreferrer">공식 안내 바로가기 →</a>'
     + '</div>';
 }
 
