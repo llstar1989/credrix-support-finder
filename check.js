@@ -2442,7 +2442,7 @@ function supportFinderUpdatePagination() {
   nextBtn.disabled = supportFinderCurrentPage === totalPages;
 
   var html = "";
-  var maxVisiblePages = 7;
+  var maxVisiblePages = 4;
 
   var startPage = Math.max(1, supportFinderCurrentPage - Math.floor(maxVisiblePages / 2));
   var endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
@@ -2502,9 +2502,8 @@ function supportFinderShowSortButtons() {
   filterButtons.innerHTML =
     '<span class="support-finder-filter-label">정렬:</span>' +
     '<button class="support-finder-filter-btn active" id="supportFinderRecommendedSort" onclick="supportFinderSortResults(\'recommended\')">추천순</button>' +
-    '<button class="support-finder-filter-btn" id="supportFinderDeadlineSort" onclick="supportFinderSortResults(\'deadline\')">신청상태순</button>' +
-    '<button class="support-finder-filter-btn" id="supportFinderAmountSort" onclick="supportFinderSortResults(\'amount\')">지원금액순</button>' +
-    '<button class="support-finder-filter-btn" id="supportFinderAgencySort" onclick="supportFinderSortResults(\'agency\')">공식기관순</button>';
+    '<button class="support-finder-filter-btn" id="supportFinderAmountSort" onclick="supportFinderSortResults(\'amount\')">지원금순</button>' +
+    '<button class="support-finder-filter-btn" id="supportFinderDeadlineSort" onclick="supportFinderSortResults(\'deadline\')">신청상태</button>';
 }
 
 function supportFinderHideSortButtons() {
