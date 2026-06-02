@@ -2266,7 +2266,6 @@ function supportFinderGetCheckedValues(selector) {
 function supportFinderStartSearch() {
   var selectedAges = supportFinderGetCheckedValues(".age-grid");
   var selectedRegions = supportFinderGetCheckedValues(".region-grid");
-
   var resultsGrid = document.getElementById("supportFinderSupportGrid");
   var resultsCount = document.getElementById("supportFinderResultsCount");
 
@@ -2287,12 +2286,10 @@ function supportFinderStartSearch() {
     supportFinderOriginalResults = [];
     supportFinderAllResults = [];
     supportFinderCurrentPage = 1;
-
     resultsGrid.innerHTML = supportFinderNoResultHTML("연령대와 지역을 각각 1개 이상 선택해주세요.");
     resultsCount.textContent = "0개 지원금";
     supportFinderHidePagination();
     supportFinderHideSortButtons();
-    supportFinderUpdateResultSummary(selectedAges, selectedRegions, 0);
     return;
   }
 
@@ -2316,7 +2313,7 @@ function supportFinderStartSearch() {
   supportFinderCurrentPage = 1;
   supportFinderCurrentSort = "recommended";
 
-  supportFinderUpdateResultSummary(selectedAges, selectedRegions, supportFinderAllResults.length);
+  resultsCount.textContent = supportFinderAllResults.length + "개 지원금";
 
   if (supportFinderAllResults.length === 0) {
     resultsGrid.innerHTML = supportFinderNoResultHTML("선택한 조건에 맞는 지원금이 없습니다.");
